@@ -15,7 +15,10 @@ import {
   Target,
   ChevronRight,
   Filter,
-  BookOpen
+  BookOpen,
+  FileText,
+  ArrowUpRight,
+  Users
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -38,6 +41,7 @@ import {
   Cell
 } from 'recharts';
 import { getAIInsights } from '../services/geminiService';
+import { UserRole } from '../types';
 
 const SUBJECTS = ['Mathematics', 'Science', 'English', 'History'];
 
@@ -104,7 +108,36 @@ const CONCEPT_MASTERY_DATA: Record<string, any[]> = {
   ]
 };
 
-const Performance: React.FC = () => {
+const QUIZ_SCORES: Record<string, any[]> = {
+  'Mathematics': [
+    { id: 'q1', title: 'Unit Test: Polynomials', score: 28, total: 30, date: '2024-03-15', type: 'Unit Test', status: 'Graded' },
+    { id: 'q2', title: 'Weekly Quiz: Algebra Basics', score: 18, total: 20, date: '2024-03-10', type: 'Quiz', status: 'Graded' },
+    { id: 'q3', title: 'Surprise Test: Geometry', score: 12, total: 15, date: '2024-03-05', type: 'Test', status: 'Graded' },
+    { id: 'q4', title: 'Monthly Assessment: Number Systems', score: 45, total: 50, date: '2024-02-28', type: 'Exam', status: 'Graded' },
+  ],
+  'Science': [
+    { id: 's1', title: 'Lab Quiz: Chemical Reactions', score: 14, total: 15, date: '2024-03-12', type: 'Quiz', status: 'Graded' },
+    { id: 's2', title: 'Unit Test: Atomic Structure', score: 25, total: 30, date: '2024-03-08', type: 'Unit Test', status: 'Graded' },
+    { id: 's3', title: 'Weekly Quiz: Thermodynamics', score: 9, total: 20, date: '2024-03-01', type: 'Quiz', status: 'Graded' },
+  ],
+  'English': [
+    { id: 'e1', title: 'Grammar Assessment: Tenses', score: 19, total: 20, date: '2024-03-14', type: 'Quiz', status: 'Graded' },
+    { id: 'e2', title: 'Literature Test: Shakespeare', score: 22, total: 30, date: '2024-03-07', type: 'Test', status: 'Graded' },
+  ],
+  'History': [
+    { id: 'h1', title: 'Unit Test: French Revolution', score: 27, total: 30, date: '2024-03-11', type: 'Unit Test', status: 'Graded' },
+    { id: 'h2', title: 'Quiz: Industrialization', score: 15, total: 15, date: '2024-03-04', type: 'Quiz', status: 'Graded' },
+  ]
+};
+
+const ATTENDANCE_DATA: Record<string, { total: number, attended: number, batchAvg: number }> = {
+  'Mathematics': { total: 45, attended: 42, batchAvg: 85 },
+  'Science': { total: 40, attended: 38, batchAvg: 82 },
+  'English': { total: 35, attended: 30, batchAvg: 80 },
+  'History': { total: 30, attended: 28, batchAvg: 88 },
+};
+
+const Performance: React.FC<{ userRole?: UserRole }> = ({ userRole }) => {
   const [selectedSubject, setSelectedSubject] = useState('Mathematics');
   const [aiInsights, setAiInsights] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -330,6 +363,183 @@ const Performance: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* RECENT ASSESSMENT SCORES & ATTENDANCE - PARENT ONLY */}
+      {userRole === UserRole.PARENT && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-[3rem] border border-[#CDD4DD] dark:border-slate-800 p-8 shadow-custom">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div>
+                <h3 className="text-xl font-bold text-[#2C3E50] dark:text-slate-200 flex items-center gap-2">
+                  <FileText size={22} className="text-primary" /> Recent {selectedSubject} Assessments
+                </h3>
+                <p className="text-sm text-[#6B7280] dark:text-slate-500 font-medium">
+                  Track your child's performance in recent tests and quizzes
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button className="flex items-center gap-2 px-4 py-2 bg-brandBg dark:bg-slate-800 text-primary rounded-xl text-xs font-bold border border-primary/10">
+                  <Download size={14} /> Export Report
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-[#CDD4DD] dark:border-slate-800">
+                    <th className="pb-4 text-[10px] font-black text-[#6B7280] dark:text-slate-500 uppercase tracking-widest">Assessment Name</th>
+                    <th className="pb-4 text-[10px] font-black text-[#6B7280] dark:text-slate-500 uppercase tracking-widest">Type</th>
+                    <th className="pb-4 text-[10px] font-black text-[#6B7280] dark:text-slate-500 uppercase tracking-widest">Date</th>
+                    <th className="pb-4 text-[10px] font-black text-[#6B7280] dark:text-slate-500 uppercase tracking-widest text-right">Score</th>
+                    <th className="pb-4 text-[10px] font-black text-[#6B7280] dark:text-slate-500 uppercase tracking-widest text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#CDD4DD]/50 dark:divide-slate-800/50">
+                  {(QUIZ_SCORES[selectedSubject] || []).map((quiz) => (
+                    <tr key={quiz.id} className="group hover:bg-brandBg/30 dark:hover:bg-slate-800/20 transition-colors">
+                      <td className="py-5">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-[#CDD4DD] dark:border-slate-700 shadow-sm">
+                            <Target size={16} className="text-primary" />
+                          </div>
+                          <p className="text-sm font-bold text-[#2C3E50] dark:text-slate-200">{quiz.title}</p>
+                        </div>
+                      </td>
+                      <td className="py-5">
+                        <span className="text-[10px] font-bold px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-md">
+                          {quiz.type}
+                        </span>
+                      </td>
+                      <td className="py-5 text-xs font-medium text-[#6B7280] dark:text-slate-500">
+                        {new Date(quiz.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </td>
+                      <td className="py-5 text-right">
+                        <div className="inline-flex flex-col items-end">
+                          <p className={`text-sm font-black ${quiz.score / quiz.total > 0.8 ? 'text-green-600' : quiz.score / quiz.total > 0.6 ? 'text-primary' : 'text-orange-600'}`}>
+                            {quiz.score} / {quiz.total}
+                          </p>
+                          <p className="text-[9px] font-bold text-[#6B7280] opacity-60 uppercase tracking-tighter">
+                            ({Math.round((quiz.score / quiz.total) * 100)}%)
+                          </p>
+                        </div>
+                      </td>
+                      <td className="py-5 text-center">
+                        <div className="flex items-center justify-center gap-1.5 text-[10px] font-black text-green-600 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full w-fit mx-auto">
+                          <CheckCircle2 size={12} />
+                          {quiz.status}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-8 p-6 bg-primary/5 dark:bg-primary/10 rounded-3xl border border-primary/10 flex items-start gap-4">
+              <div className="p-3 bg-white dark:bg-slate-800 rounded-2xl shadow-sm text-primary">
+                <TrendingUp size={20} />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-primary dark:text-secondary">Parent's Insight</p>
+                <p className="text-xs text-[#6B7280] dark:text-slate-400 mt-1 leading-relaxed">
+                  Rahul's scores in <strong>{selectedSubject}</strong> have shown a consistent upward trend over the last 3 assessments. 
+                  His accuracy in {selectedSubject === 'Mathematics' ? 'Algebra' : 'recent topics'} has improved by 15% compared to last month.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* ATTENDANCE SECTION */}
+          <div className="bg-white dark:bg-slate-900 rounded-[3rem] border border-[#CDD4DD] dark:border-slate-800 p-8 shadow-custom">
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-[#2C3E50] dark:text-slate-200 flex items-center gap-2">
+                <Clock size={22} className="text-primary" /> {selectedSubject} Attendance
+              </h3>
+              <p className="text-sm text-[#6B7280] dark:text-slate-500 font-medium">Class participation summary</p>
+            </div>
+
+            <div className="flex flex-col items-center justify-center space-y-6">
+              <div className="relative w-48 h-48">
+                <svg className="w-full h-full transform -rotate-90">
+                  <circle
+                    cx="96"
+                    cy="96"
+                    r="88"
+                    stroke="currentColor"
+                    strokeWidth="12"
+                    fill="transparent"
+                    className="text-slate-100 dark:text-slate-800"
+                  />
+                  <circle
+                    cx="96"
+                    cy="96"
+                    r="88"
+                    stroke="currentColor"
+                    strokeWidth="12"
+                    fill="transparent"
+                    strokeDasharray={2 * Math.PI * 88}
+                    strokeDashoffset={2 * Math.PI * 88 * (1 - (ATTENDANCE_DATA[selectedSubject]?.attended / ATTENDANCE_DATA[selectedSubject]?.total))}
+                    strokeLinecap="round"
+                    className="text-primary transition-all duration-1000 ease-out"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-4xl font-black text-[#2C3E50] dark:text-slate-100">
+                    {Math.round((ATTENDANCE_DATA[selectedSubject]?.attended / ATTENDANCE_DATA[selectedSubject]?.total) * 100)}%
+                  </span>
+                  <span className="text-[10px] font-bold text-[#6B7280] dark:text-slate-500 uppercase tracking-widest">Attended</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 w-full">
+                <div className="p-4 bg-brandBg dark:bg-slate-800/50 rounded-2xl border border-[#CDD4DD]/50 dark:border-slate-700 text-center">
+                  <p className="text-[10px] font-black text-[#6B7280] dark:text-slate-500 uppercase tracking-widest mb-1">Total Classes</p>
+                  <p className="text-xl font-black text-[#2C3E50] dark:text-slate-100">{ATTENDANCE_DATA[selectedSubject]?.total}</p>
+                </div>
+                <div className="p-4 bg-primary/5 dark:bg-primary/10 rounded-2xl border border-primary/10 text-center">
+                  <p className="text-[10px] font-black text-primary dark:text-secondary uppercase tracking-widest mb-1">Attended</p>
+                  <p className="text-xl font-black text-primary dark:text-secondary">{ATTENDANCE_DATA[selectedSubject]?.attended}</p>
+                </div>
+              </div>
+
+              <div className="w-full p-4 bg-green-50 dark:bg-green-900/10 rounded-2xl border border-green-100 dark:border-green-900/30 flex items-center gap-3">
+                <CheckCircle2 size={18} className="text-green-600 shrink-0" />
+                <p className="text-xs font-bold text-green-700 dark:text-green-400">
+                  {ATTENDANCE_DATA[selectedSubject]?.attended >= ATTENDANCE_DATA[selectedSubject]?.total * 0.9 
+                    ? "Excellent! Maintaining above 90% attendance." 
+                    : "Good progress. Keep attending regularly."}
+                </p>
+              </div>
+
+              <div className="w-full pt-6 border-t border-[#CDD4DD]/50 dark:border-slate-800/50 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Users size={16} className="text-[#6B7280]" />
+                    <span className="text-[10px] font-black text-[#6B7280] dark:text-slate-500 uppercase tracking-widest">Batch Average</span>
+                  </div>
+                  <span className="text-sm font-black text-[#2C3E50] dark:text-slate-200">{ATTENDANCE_DATA[selectedSubject]?.batchAvg}%</span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp size={16} className="text-primary" />
+                    <span className="text-[10px] font-black text-[#6B7280] dark:text-slate-500 uppercase tracking-widest">Comparison</span>
+                  </div>
+                  <span className={`text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-tight ${
+                    Math.round((ATTENDANCE_DATA[selectedSubject]?.attended / ATTENDANCE_DATA[selectedSubject]?.total) * 100) >= ATTENDANCE_DATA[selectedSubject]?.batchAvg
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-red-100 text-red-700'
+                  }`}>
+                    {Math.round((ATTENDANCE_DATA[selectedSubject]?.attended / ATTENDANCE_DATA[selectedSubject]?.total) * 100) - ATTENDANCE_DATA[selectedSubject]?.batchAvg >= 0 ? '↑' : '↓'}
+                    {Math.abs(Math.round((ATTENDANCE_DATA[selectedSubject]?.attended / ATTENDANCE_DATA[selectedSubject]?.total) * 100) - ATTENDANCE_DATA[selectedSubject]?.batchAvg)}% {Math.round((ATTENDANCE_DATA[selectedSubject]?.attended / ATTENDANCE_DATA[selectedSubject]?.total) * 100) - ATTENDANCE_DATA[selectedSubject]?.batchAvg >= 0 ? 'above' : 'below'} batch
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
