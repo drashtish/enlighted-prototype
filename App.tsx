@@ -59,7 +59,7 @@ const App: React.FC = () => {
           <Route path="/notes" element={<RevisionNotes />} />
           <Route path="/assignments" element={<Assignments userRole={userRole} />} />
           <Route path="/assignment-taking/:id" element={<AssignmentTaking />} />
-          <Route path="/performance" element={<Performance />} />
+          <Route path="/performance" element={<Performance userRole={userRole} />} />
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/monitoring" element={<Monitoring />} />
           <Route path="/billing" element={<Billing />} />
